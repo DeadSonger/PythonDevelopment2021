@@ -8,8 +8,14 @@ class Application(tk.Frame):
         super().__init__(master)
         self.master.title(f"Tag game {game_model.width}x{game_model.height}")
         self._game_model = game_model or TagModel(4, 4)
+        self._step_counter = 0
+        self._step_counter_text_var = tk.StringVar()
         self.grid(sticky=tk.NSEW)
         self.__create_widgets()
+
+    def __set_step_counter(self, val: int):
+        self._step_counter = val
+        self._step_counter_text_var.set(f'Steps: {val:03d}')
 
     def __setup_grid(self):
         top = self.winfo_toplevel()
@@ -21,12 +27,6 @@ class Application(tk.Frame):
             self.rowconfigure(y, weight=10)
         for x in range(self._game_model.width):
             self.columnconfigure(x, weight=1)
-
-    def __make_shuffle(self):
-        self._game_model.shuffle()
-        for idx, button in self._chip_buttons.items():
-            x, y = self._game_model.get_chip_coords(idx)
-            button.grid(row=y+1, column=x)
 
     def __generate_new_game_part(self):
         for button in self._chip_buttons.values():
@@ -52,24 +52,43 @@ class Application(tk.Frame):
             self._game_model.move_chip(idx)
             self._chip_buttons[idx].grid(row=free_space[1]+1, column=free_space[0])
 
+            self.__set_step_counter(self._step_counter+1)
+
             if self._game_model.check_win():
-                messagebox.showinfo("WIN", 'You are win this game!')
+                messagebox.showinfo("WIN", f'You are win this game use {self._step_counter} steps!')
                 self.__make_shuffle()
         return wrapper
-
-    def change_game(self, new_game: TagModel):
-        self._game_model = new_game
-        self.master.title(f"Tag game {new_game.width}x{new_game.height}")
-        self.__generate_new_game_part()
 
     def __create_widgets(self):
         self.__setup_grid()
 
-        self._new_button = tk.Button(self, text='Shuffle', command=self.__make_shuffle)
-        self._new_button.grid(row=0, column=0, sticky=tk.NSEW)
+        self._menu_frame = tk.Frame(self)
+        self._menu_frame.grid(sticky=tk.NSEW, row=0, column=0, columnspan=self._game_model.width)
 
-        self._exit_button = tk.Button(self, text='Exit', command=self.quit)
-        self._exit_button.grid(row=0, column=self._game_model.width-1, sticky=tk.NSEW)
+        for i in range(3):
+            self._menu_frame.columnconfigure(i, weight=1)
+
+        self._shuffle_button = tk.Button(self._menu_frame, width=5, text='Shuffle', command=self.__make_shuffle)
+        self._shuffle_button.grid(row=0, padx=10, ipadx=10, column=0, sticky=tk.NSEW)
+
+        self.__set_step_counter(0)
+        self._step_counter_text = tk.Label(self._menu_frame, width=5, textvariable=self._step_counter_text_var)
+        self._step_counter_text.grid(row=0, padx=10, ipadx=10, column=1, sticky=tk.NSEW)
+
+        self._exit_button = tk.Button(self._menu_frame, width=5, text='Exit', command=self.quit)
+        self._exit_button.grid(row=0, padx=10, ipadx=10, column=2, sticky=tk.NSEW)
 
         self._chip_buttons = {}
+        self.__generate_new_game_part()
+
+    def __make_shuffle(self):
+        self._game_model.shuffle()
+        self.__set_step_counter(0)
+        for idx, button in self._chip_buttons.items():
+            x, y = self._game_model.get_chip_coords(idx)
+            button.grid(row=y + 1, column=x)
+
+    def change_game(self, new_game: TagModel):
+        self._game_model = new_game
+        self.master.title(f"Tag game {new_game.width}x{new_game.height}")
         self.__generate_new_game_part()
