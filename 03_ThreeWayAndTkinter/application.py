@@ -4,7 +4,6 @@ from setup_application import SetupApplication
 from model import TagModel
 
 
-
 class Application(tk.Frame):
     def __init__(self, master=None, game_model: TagModel = None):
         super().__init__(master)
@@ -25,22 +24,33 @@ class Application(tk.Frame):
         top.columnconfigure(0, weight=1)
 
         self.rowconfigure(0, weight=1)
-        for y in range(1, 1+self._game_model.height):
-            self.rowconfigure(y, weight=10)
-        for x in range(self._game_model.width):
-            self.columnconfigure(x, weight=1)
+        self.rowconfigure(1, weight=10)
+        self.columnconfigure(0, weight=1)
 
     def __generate_new_game_part(self):
         for button in self._chip_buttons.values():
             button.destroy()
         self._chip_buttons.clear()
+
+        if self._game_field:
+            self._game_field.destroy()
+
+        self._game_field = tk.Frame(self)
+        self._game_field.grid(sticky=tk.NSEW, row=1, column=0)
+
+        for y in range(self._game_model.height):
+            self._game_field.rowconfigure(y, weight=1)
+
+        for x in range(self._game_model.width):
+            self._game_field.columnconfigure(x, weight=1)
+
         for y in range(self._game_model.height):
             for x in range(self._game_model.width):
                 current_chip = self._game_model.get_chip_idx_at(x, y)
                 if current_chip is None:
                     continue
                 button_name = str(current_chip + 1)
-                b = tk.Button(self,
+                b = tk.Button(self._game_field,
                               width=10, height=3,
                               text=button_name, command=self.__on_chip_button_press_generator(current_chip))
                 b.grid(row=1+y, column=x, padx=1, pady=1, ipadx=1, ipady=1, sticky=tk.NSEW)
@@ -95,6 +105,7 @@ class Application(tk.Frame):
         self._exit_button.grid(row=0, padx=10, ipadx=10, column=3, sticky=tk.NSEW)
 
         self._chip_buttons = {}
+        self._game_field = None
         self.__generate_new_game_part()
 
     def __make_shuffle(self):
