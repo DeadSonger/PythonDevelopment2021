@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
+from setup_application import SetupApplication
 from model import TagModel
+
 
 
 class Application(tk.Frame):
@@ -59,24 +61,38 @@ class Application(tk.Frame):
                 self.__make_shuffle()
         return wrapper
 
+    def __on_new_game_press(self):
+        l = tk.Toplevel(self)
+
+        def callback(width, height):
+            new_game = TagModel(width, height)
+            new_game.shuffle()
+            self.change_game(new_game)
+
+        l.title("New game setup")
+        SetupApplication(l, callback)
+
     def __create_widgets(self):
         self.__setup_grid()
 
         self._menu_frame = tk.Frame(self)
         self._menu_frame.grid(sticky=tk.NSEW, row=0, column=0, columnspan=self._game_model.width)
 
-        for i in range(3):
+        for i in range(4):
             self._menu_frame.columnconfigure(i, weight=1)
 
         self._shuffle_button = tk.Button(self._menu_frame, width=5, text='Shuffle', command=self.__make_shuffle)
         self._shuffle_button.grid(row=0, padx=10, ipadx=10, column=0, sticky=tk.NSEW)
 
+        self._new_game_button = tk.Button(self._menu_frame, width=5, text='New', command=self.__on_new_game_press)
+        self._new_game_button.grid(row=0, padx=10, ipadx=10, column=1, sticky=tk.NSEW)
+
         self.__set_step_counter(0)
         self._step_counter_text = tk.Label(self._menu_frame, width=5, textvariable=self._step_counter_text_var)
-        self._step_counter_text.grid(row=0, padx=10, ipadx=10, column=1, sticky=tk.NSEW)
+        self._step_counter_text.grid(row=0, padx=10, ipadx=10, column=2, sticky=tk.NSEW)
 
         self._exit_button = tk.Button(self._menu_frame, width=5, text='Exit', command=self.quit)
-        self._exit_button.grid(row=0, padx=10, ipadx=10, column=2, sticky=tk.NSEW)
+        self._exit_button.grid(row=0, padx=10, ipadx=10, column=3, sticky=tk.NSEW)
 
         self._chip_buttons = {}
         self.__generate_new_game_part()
