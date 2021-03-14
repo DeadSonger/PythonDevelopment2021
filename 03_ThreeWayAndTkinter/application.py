@@ -118,4 +118,5 @@ class Application(tk.Frame):
     def change_game(self, new_game: TagModel):
         self._game_model = new_game
         self.master.title(f"Tag game {new_game.width}x{new_game.height}")
+        self.__set_step_counter(0)
         self.__generate_new_game_part()
